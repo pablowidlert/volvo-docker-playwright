@@ -1,0 +1,56 @@
+name: Run playwright tests in Docker
+
+on:
+    push:
+        branches: ['main']
+    pull_request:
+        branches: ['main']
+    workflow_dispatch:
+
+jobs:
+    setup:
+        runs-on: ubuntu-latest
+        outputs:
+            timestamp: ${{ steps.timestampid.outputs.timestamp}}
+        steps:
+            - name: Set a timestamp
+              id: timestampid
+              run: |
+                  echo "timestamp=$(date --utc +%Y%m%d_%H%M%SZ)" >> "$GITHUB_OUTPUT"
+                  echo $(date --utc +%Y%m%d_%H%M%SZ)
+
+    e2e-tests:
+        needs: [setup]
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Build the Playwright Docker e2e image
+              run: docker build -t volvo-playwright .
+
+            - name: Run Playwright tests on Docker
+              run: docker run -v $(pwd)/playwright-report:/testing/playwright-report --env-file local.env --name volvo-playwright volvo-playwright npm run pw:ci
+
+            - name: Upload Test Report Artifact
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: E2E Test Report
+                  path: playwright-report
+                  retention-days: 30
+
+            - name: Publish Test Report
+              uses: peaceiris/actions-gh-pages@v3
+              if: always()
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_branch: gh-pages
+                  destination_dir: ${{ needs.setup.outputs.timestamp }}
+                  publish_dir: playwright-report
+
+            - name: Write publish message in summary
+              if: always()
+              run: |
+                  echo "### HTML Test results - https://${{ github.repository_owner }}.github.io/volvo-playwright-docker/${{ needs.setup.outputs.timestamp }}/" >> $GITHUB_STEP_SUMMARY
+

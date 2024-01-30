@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "ES2017",
+        "module": "CommonJS",
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "baseUrl": ".",
+        "paths": {
+            "@fixtures/*": ["fixtures/*"],
+            "@pages/*": ["pom/pages/*"],
+            "@components/*": ["pom/components/*"]
+        }
+    }
+}
+
