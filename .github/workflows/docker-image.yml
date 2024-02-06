@@ -43,7 +43,7 @@ jobs:
             - name:  Update index.html in root # Using shell script to update
               run:   |
                       chmod +x ./CustomIndexHtml.sh
-                                  ./CustomIndexHtml.sh ${{ steps.timestampid.outputs.timestamp }}
+                                  ./CustomIndexHtml.sh ${{ needs.setup.outputs.timestamp }}
                                   
             - name: Push the new files to github pages
             # This will create a separate branch called gh-pages where it will store only reports. And from where it will push all future changes 
